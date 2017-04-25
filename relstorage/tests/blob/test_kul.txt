@@ -1,0 +1,53 @@
+##############################################################################
+#
+# Copyright (c) 2005-2007 Zope Foundation and Contributors.
+# All Rights Reserved.
+#
+# This software is subject to the provisions of the Zope Public License,
+# Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+# WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+##############################################################################
+
+Transaction support for Blobs
+=============================
+
+We need a database with a blob supporting storage::
+
+    >>> import ZODB.blob, transaction
+    >>> blob_dir = 'blobs'
+    >>> blob_storage = create_storage(blob_dir=blob_dir)
+    >>> database = ZODB.DB(blob_storage)
+    >>> connection6 = database.open()
+    >>> root6 = connection6.root()
+    >>> blob = ZODB.blob.Blob()
+    >>> blob_fh = blob.open("w")
+    >>> blob_fh.write("I'm a happy blob.")
+    >>> blob_fh.close()
+    >>> root6['blob'] = blob
+    >>> transaction.commit()
+    >>> open(blob.committed()).read()
+    "I'm a happy blob."
+
+    >>> olddata, oldserial = blob_storage.load(blob._p_oid, '')
+    >>> t = transaction.get()
+    >>> blob_storage.tpc_begin(t)
+    >>> open('blobfile', 'w').write('This data should go away')
+    >>> s1 = blob_storage.storeBlob(blob._p_oid, oldserial, olddata, 'blobfile',
+    ...                             '', t)
+    >>> new_oid = blob_storage.new_oid()
+    >>> open('blobfile2', 'w').write('This data should go away too')
+    >>> s2 = blob_storage.storeBlob(new_oid, '\0'*8, olddata, 'blobfile2',
+    ...                             '', t)
+
+    >>> serials = blob_storage.tpc_vote(t)
+    >>> sp = t.savepoint()
+    >>> if s1 is None:
+    ...     s1 = [s for (oid, s) in serials if oid == blob._p_oid][0]
+    >>> if s2 is None:
+    ...     s2 = [s for (oid, s) in serials if oid == new_oid][0]
+
+    >>> blob_storage.tpc_abort(t)

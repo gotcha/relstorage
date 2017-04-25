@@ -613,7 +613,7 @@ def storage_reusable_suite(prefix, factory,
     suite = unittest.TestSuite()
     suite.addTest(doctest.DocFileSuite(
         "blob_connection.txt", "blob_importexport.txt",
-        "blob_transaction.txt",
+        "blob_transaction.txt", "test_kul.txt",
         setUp=setup, tearDown=tearDown,
         optionflags=doctest.ELLIPSIS,
         ))

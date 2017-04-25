@@ -193,8 +193,8 @@ def test_suite():
 
         from relstorage.tests.blob.testblob import storage_reusable_suite
         from relstorage.tests.util import shared_blob_dir_choices
-        for shared_blob_dir in shared_blob_dir_choices:
-            for keep_history in (False, True):
+        for shared_blob_dir in (True,): #shared_blob_dir_choices:
+            for keep_history in (False,): #(False, True):
                 def create_storage(name, blob_dir,
                         shared_blob_dir=shared_blob_dir,
                         keep_history=keep_history, **kw):
